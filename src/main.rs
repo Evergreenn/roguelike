@@ -339,7 +339,7 @@ fn cast_attack_buff(_inventory_id: usize, objects: &mut [Object], messages: &mut
         objects[PLAYER].cast("attack_buff", ATTACK_BUFF);
         message(
             messages,
-            format!("Attack up by: {}", ATTACK_BUFF),
+            format!("Permanently increase your attack by: {}", ATTACK_BUFF),
             colors::GREEN,
         );
         return UseResult::UsedUp;
