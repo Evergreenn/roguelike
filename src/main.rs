@@ -6,12 +6,12 @@ use tcod::console::*;
 use tcod::map::{FovAlgorithm, Map as FovMap};
 use tcod::input::{self, Event, Key, Mouse};
 
-const SCREEN_WIDTH: i32 = 80;
-const SCREEN_HEIGHT: i32 = 50;
+const SCREEN_WIDTH: i32 = 90;
+const SCREEN_HEIGHT: i32 = 60;
 const LIMIT_FPS: i32 = 20;
 
-const MAP_WIDTH: i32 = 80;
-const MAP_HEIGHT: i32 = 43;
+const MAP_WIDTH: i32 = 90;
+const MAP_HEIGHT: i32 = 53;
 
 const COLOR_DARK_WALL: Color = Color { r: 0, g: 0, b: 100 };
 const COLOR_LIGHT_WALL: Color = Color {r: 130, g: 110, b: 50};
@@ -40,6 +40,8 @@ const MAX_ROOM_ITEM:i32 = 2;
 const INVENTORY_WIDTH:i32 = 50;
 
 const HEAL_AMOUNT:i32 = 4;
+const ATTACK_BUFF:i32 = 2;
+const PLAYER_MAX_ATTACK:i32 = 9;
 
 
 #[derive(Debug)]
@@ -116,7 +118,6 @@ impl Object {
         let damage = self.fighter.map_or(0, |f| f.power) - target.fighter.map_or(0, |f| f.defense);
 
         if damage > 0 {
-            // make the target take some damage
             message(
                 messages,
                 format!("{} attacks {} for {} hit points.",
@@ -135,13 +136,31 @@ impl Object {
         }
     }
 
-    pub fn heal(&mut self, amount: i32) {
-        if let Some(ref mut fighter) = self.fighter {
-            fighter.hp += amount;
-            if fighter.hp > fighter.max_hp {
-                fighter.hp = fighter.max_hp;
-            }
+    pub fn cast(&mut self, cast_type: &str, amount: i32) {
+
+        match cast_type.as_ref() {
+
+            "heal" =>
+                if let Some(ref mut fighter) = self.fighter {
+                    fighter.hp += amount;
+                    if fighter.hp > fighter.max_hp {
+                        fighter.hp = fighter.max_hp;
+                    }
+                }
+
+            "attack_buff" =>
+                if let Some(ref mut fighter) = self.fighter {
+                    fighter.power += amount;
+                    if fighter.power > PLAYER_MAX_ATTACK{
+                        fighter.power = PLAYER_MAX_ATTACK;
+                    }
+                }
+
+            __ => ()
+
         }
+
+
     }
 
 }
@@ -166,6 +185,7 @@ impl Tile {
 #[derive(Clone, Copy, Debug)]
 enum Item {
     Heal,
+    AttackBuff
 }
 
 enum UseResult {
@@ -299,10 +319,27 @@ fn cast_heal(_inventory_id: usize, objects: &mut [Object], messages: &mut Messag
             "Your wounds start to feel better!",
             colors::LIGHT_VIOLET,
         );
-        objects[PLAYER].heal(HEAL_AMOUNT);
+        objects[PLAYER].cast("heal", HEAL_AMOUNT);
         message(
             messages,
             format!("Healed by: {}", HEAL_AMOUNT),
+            colors::GREEN,
+        );
+        return UseResult::UsedUp;
+    }
+    UseResult::Cancelled
+}
+
+fn cast_attack_buff(_inventory_id: usize, objects: &mut [Object], messages: &mut Messages) -> UseResult{
+    if let Some(fighter) = objects[PLAYER].fighter {
+        if fighter.power == PLAYER_MAX_ATTACK {
+            message(messages, "You are already at max attack.", colors::RED);
+            return UseResult::Cancelled;
+        }
+        objects[PLAYER].cast("attack_buff", ATTACK_BUFF);
+        message(
+            messages,
+            format!("Attack up by: {}", ATTACK_BUFF),
             colors::GREEN,
         );
         return UseResult::UsedUp;
@@ -456,7 +493,7 @@ impl DeathCallback {
 fn player_death(player: &mut Object, messages: &mut Messages) {
     message(
         messages,
-        "You died looser!",
+        "You died, see you another time!",
         colors::RED
     );
     player.char = '%';
@@ -521,10 +558,10 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>){
 
         if !is_blocked(x, y, map, objects){
             let mut monster = if rand::random::<f32>() < 0.8 {
-                let mut orc = Object::new(x, y, 'p', "orc", colors::DESATURATED_GREEN, true);
+                let mut orc = Object::new(x, y, 'p', "orc", colors::LIGHT_GREEN, true);
                 orc.fighter = Some(Fighter {
-                    max_hp: 10,
-                    hp: 10,
+                    max_hp: 9,
+                    hp: 9,
                     defense: 0,
                     power: 3,
                     on_death: DeathCallback::Monster,
@@ -535,10 +572,10 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>){
             }else if rand::random::<f32>() < 0.1 {
                 let mut boss = Object::new(x, y, 'W', "boss", colors::RED, true);
                 boss.fighter = Some(Fighter{
-                    max_hp: 15,
-                    hp: 15,
-                    defense: 1,
-                    power: 7,
+                    max_hp: 25,
+                    hp: 25,
+                    defense: 4,
+                    power: 5,
                     on_death: DeathCallback::Monster,
                 });
                 boss.ai = Some(Ai);
@@ -548,7 +585,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>){
                 troll.fighter = Some(Fighter {
                     max_hp: 16,
                     hp: 16,
-                    defense: 1,
+                    defense: 2,
                     power: 4,
                     on_death: DeathCallback::Monster,
                 });
@@ -569,9 +606,20 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>){
         let y = rand::thread_rng().gen_range(room.y1 +1 , room.y2);
 
         if !is_blocked(x, y, map, objects){
-            let mut object = Object::new(x, y, '!', "healing potion", colors::VIOLET, false);
-            object.item = Some(Item::Heal);
-            objects.push(object);
+
+            let dice = rand::random::<f32>();
+            let item = if dice < 0.8 {
+                let mut object = Object::new(x, y, '!', "healing potion", colors::VIOLET, false);
+                object.item = Some(Item::Heal);
+                object
+            } else {
+                let mut object = Object::new(x, y, '+', "attack scroll", colors::VIOLET, false);
+                object.item = Some(Item::AttackBuff);
+                object
+            };
+
+            objects.push(item);
+
         }
     }
 }
@@ -581,6 +629,7 @@ fn use_item (inventory_id: usize, inventory: &mut Vec<Object>, object: &mut [Obj
     if let Some(item) = inventory[inventory_id].item {
         let on_use = match item {
             Heal => cast_heal,
+            AttackBuff => cast_attack_buff
         };
 
         match on_use(inventory_id, object, messages){
@@ -595,7 +644,7 @@ fn use_item (inventory_id: usize, inventory: &mut Vec<Object>, object: &mut [Obj
         message(
         messages,
         format!("The {} cannot be used.", inventory[inventory_id].name),
-        colors::WHITE,
+        colors::RED,
         );
     }
 }
@@ -706,16 +755,38 @@ fn render_all(root: &mut Root, con: &mut Offscreen, panel: &mut Offscreen, objec
 
         let hp = objects[PLAYER].fighter.map_or(0,|f |f.hp);
         let max_hp = objects[PLAYER].fighter.map_or(0,|f |f.max_hp);
+        let attack = objects[PLAYER].fighter.map_or(0,|f |f.power);
+        let defense = objects[PLAYER].fighter.map_or(0,|f |f.defense);
 
         render_bar(panel, 1, 1, BAR_WIDTH, "HP", hp, max_hp, colors::LIGHT_RED, colors::DARKER_RED);
 
         panel.set_default_foreground(colors::LIGHT_GREY);
         panel.print_ex(
             1,
-            0, BackgroundFlag::None,
+            0,
+            BackgroundFlag::None,
             TextAlignment::Left,
             get_names_under_mouse(mouse, objects, fov_map)
         );
+
+        panel.set_default_foreground(colors::LIGHT_AZURE);
+        panel.print_ex(
+            1,
+            3,
+            BackgroundFlag::None,
+            TextAlignment::Left,
+            format!("attack: {}", attack)
+        );
+
+        panel.set_default_foreground(colors::LIGHT_AZURE);
+        panel.print_ex(
+            1,
+            4,
+            BackgroundFlag::None,
+            TextAlignment::Left,
+            format!("defense: {}", defense)
+        );
+
 
         blit(
             panel,
@@ -894,10 +965,6 @@ fn main(){
 
     while !root.window_closed(){
         con.clear();
-
-        for object in &objects {
-            object.draw(&mut con);
-        }
 
         match input::check_for_event(input::MOUSE | input::KEY_PRESS){
             Some ((_, Event::Mouse(m))) => mouse = m,
