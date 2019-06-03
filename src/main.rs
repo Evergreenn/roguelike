@@ -36,7 +36,7 @@ const MSG_X: i32 = BAR_WIDTH + 2;
 const MSG_WIDTH: i32 = SCREEN_WIDTH - BAR_WIDTH - 2;
 const MSG_HEIGHT: usize = PANEL_HEIGHT as usize - 1;
 
-const MAX_ROOM_ITEM:i32 = 2;
+const MAX_ROOM_ITEM:i32 = 30;
 const INVENTORY_WIDTH:i32 = 50;
 
 const HEAL_AMOUNT:i32 = 4;
@@ -208,7 +208,7 @@ fn move_towards(id: usize, target_x: i32, target_y: i32, map: &Map, objects: &mu
 }
 
 fn mut_two<T>(first_index: usize, second_index: usize, items: &mut [T]) -> (&mut T, &mut T) {
-    assert!(first_index != second_index);
+    assert_ne!(first_index, second_index);
 
     let split_at_index = cmp::max(first_index, second_index);
     let (first_slice, second_slice) = items.split_at_mut(split_at_index);
@@ -222,7 +222,7 @@ fn mut_two<T>(first_index: usize, second_index: usize, items: &mut [T]) -> (&mut
 
 fn menu<T: AsRef<str>>(header: &str, options: &[T], width: i32, root: &mut Root) -> Option<usize>{
     assert!(
-        options.len() <= 26,
+        options.len() <= 27,
         "Cannot have a menu with more than 26 options."
     );
 
@@ -373,11 +373,11 @@ fn is_blocked(x: i32, y: i32, map: &Map, objects: &[Object]) -> bool {
 }
 
 fn pick_item_up(object_id:usize, objects: &mut Vec<Object>, inventory: &mut Vec<Object>, messages: &mut Messages){
-    if inventory.len() > 26 {
+    if inventory.len() >= 26 {
         message(
             messages,
             format!(
-                "Your inventory is full, youcannot pick up {}",
+                "Your inventory is full, you cannot pick up {}",
                 objects[object_id].name
             ),
             colors::RED
@@ -795,7 +795,8 @@ fn handle_keys(key: Key, root: &mut Root, objects: &mut Vec<Object>, map: &Map, 
             let item_id = objects
                 .iter()
                 .position(|object |object.pos() == objects[PLAYER].pos() && object.item.is_some());
-            if let Some(item_id) = item_id{
+
+            if let Some(item_id) = item_id {
                 pick_item_up(item_id, objects, inventory, messages);
             }
             DidntTakeTurn
