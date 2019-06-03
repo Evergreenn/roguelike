@@ -388,7 +388,7 @@ fn pick_item_up(object_id:usize, objects: &mut Vec<Object>, inventory: &mut Vec<
             messages,
             format!(
                 "you pick up a {}",
-                objects[object_id].name
+                item.name
             ),
             colors::GREEN,
         );
