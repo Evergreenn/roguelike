@@ -36,7 +36,7 @@ const MSG_X: i32 = BAR_WIDTH + 2;
 const MSG_WIDTH: i32 = SCREEN_WIDTH - BAR_WIDTH - 2;
 const MSG_HEIGHT: usize = PANEL_HEIGHT as usize - 1;
 
-const MAX_ROOM_ITEM:i32 = 30;
+const MAX_ROOM_ITEM:i32 = 2;
 const INVENTORY_WIDTH:i32 = 50;
 
 const HEAL_AMOUNT:i32 = 4;
