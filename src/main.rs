@@ -676,8 +676,11 @@ fn render_all(root: &mut Root, con: &mut Offscreen, panel: &mut Offscreen, objec
         }
     }
 
-    let mut to_draw: Vec<_> = objects.iter().filter(|o| fov_map.is_in_fov(o.x, o.y)).collect();
-    to_draw.sort_by(|o1, o2| { o1.blocks.cmp(&o2.blocks) });
+    let mut to_draw: Vec<_> = objects
+        .iter()
+        .filter(|o| fov_map.is_in_fov(o.x, o.y))
+        .collect();
+    to_draw.sort_by(|o1, o2| o1.blocks.cmp(&o2.blocks));
 
     for object in &to_draw {
         object.draw(con);
@@ -902,7 +905,7 @@ fn main(){
             _ => key = Default::default(),
         }
 
-        let fov_recompute = previous_player_position != objects[PLAYER].pos();
+        let fov_recompute = previous_player_position != (objects[PLAYER].pos());
 
         render_all(&mut root, &mut con, &mut panel, &objects, &mut map, &messages, mouse, &mut fov_map, fov_recompute);
         root.flush();
