@@ -649,11 +649,10 @@ fn use_item (inventory_id: usize, inventory: &mut Vec<Object>, object: &mut [Obj
     }
 }
 
-fn make_map(objects: &mut Vec<Object>) -> (Map, (i32, i32)) {
+fn make_map(objects: &mut Vec<Object>) -> Map {
 
     let mut map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
     let mut rooms = vec![];
-    let mut starting_position = (0, 0);
 
     for _ in 0..MAX_ROOMS {
         let w = rand::thread_rng().gen_range(ROOM_MIN_SIZE, ROOM_MAX_SIZE + 1);
@@ -691,7 +690,7 @@ fn make_map(objects: &mut Vec<Object>) -> (Map, (i32, i32)) {
         }
     }
 
-    (map, starting_position)
+    map
 }
 
 fn render_all(root: &mut Root, con: &mut Offscreen, panel: &mut Offscreen, objects: &[Object], map: &mut Map, messages: &Messages, mouse: Mouse, fov_map: &mut FovMap, fov_recompute: bool){
@@ -735,7 +734,7 @@ fn render_all(root: &mut Root, con: &mut Offscreen, panel: &mut Offscreen, objec
         object.draw(con);
     }
 
-    if let Some(fighter) = objects[PLAYER].fighter {
+    if let Some(_fighter) = objects[PLAYER].fighter {
         panel.set_default_background(colors::BLACK);
         panel.clear();
 
@@ -931,7 +930,7 @@ fn main(){
 
     let mut objects = vec![player];
 
-    let (mut map, (player_x, player_y)) = make_map(&mut objects);
+    let mut map = make_map(&mut objects);
 
     let mut fov_map = FovMap::new(MAP_WIDTH, MAP_HEIGHT);
     for y in 0..MAP_HEIGHT {

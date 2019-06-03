@@ -23,8 +23,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main.rs">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="420">
-              <caret line="991" column="65" selection-start-line="991" selection-start-column="58" selection-end-line="991" selection-end-column="65" />
+            <state relative-caret-position="191">
+              <caret line="737" column="16" selection-start-line="737" selection-start-column="16" selection-end-line="737" selection-end-column="16" />
               <folding>
                 <element signature="e#1960#1961#0" expanded="true" />
                 <element signature="e#1991#1992#0" expanded="true" />
@@ -124,6 +124,7 @@
       <find>format!</find>
       <find>7</find>
       <find>player</find>
+      <find>player_x</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -141,11 +142,11 @@
   <component name="MacroExpansionManager">
     <option name="directoryName" value="uuicIIPp" />
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="562" />
-    <option name="y" value="27" />
-    <option name="width" value="799" />
-    <option name="height" value="575" />
+  <component name="ProjectFrameBounds">
+    <option name="x" value="-309" />
+    <option name="y" value="-1057" />
+    <option name="width" value="1920" />
+    <option name="height" value="1057" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -163,6 +164,11 @@
               <item name="roguelike" type="b2602c69:ProjectViewProjectNode" />
               <item name="roguelike" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="roguelike" type="b2602c69:ProjectViewProjectNode" />
+              <item name="roguelike" type="462c0819:PsiDirectoryNode" />
+              <item name="target" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -255,15 +261,15 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="61537000" />
+    <option name="totallyTimeSpent" value="62048000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-309" y="-1057" width="1920" height="1057" extended-state="6" />
-    <editor active="true" />
+    <frame x="-309" y="-1057" width="1920" height="1057" extended-state="0" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.11128861" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Inspection Results" weight="0.32953367" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
       <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3284974" />
@@ -280,7 +286,7 @@
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Database" order="3" />
-      <window_info anchor="right" id="Cargo" order="4" visible="true" weight="0.060170393" />
+      <window_info anchor="right" id="Cargo" order="4" visible="true" weight="0.24760383" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -368,10 +374,13 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/target/.rustc_info.json">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main.rs">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="420">
-          <caret line="991" column="65" selection-start-line="991" selection-start-column="58" selection-end-line="991" selection-end-column="65" />
+        <state relative-caret-position="191">
+          <caret line="737" column="16" selection-start-line="737" selection-start-column="16" selection-end-line="737" selection-end-column="16" />
           <folding>
             <element signature="e#1960#1961#0" expanded="true" />
             <element signature="e#1991#1992#0" expanded="true" />
