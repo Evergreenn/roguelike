@@ -5,7 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ebf02331-1e88-48fb-802d-3e10327d30b1" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -24,8 +23,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main.rs">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="242">
-              <caret line="671" column="22" lean-forward="true" selection-start-line="671" selection-start-column="22" selection-end-line="671" selection-end-column="22" />
+            <state relative-caret-position="179">
+              <caret line="151" column="12" lean-forward="true" selection-start-line="151" selection-start-column="12" selection-end-line="151" selection-end-column="12" />
               <folding>
                 <element signature="e#2020#2021#0" expanded="true" />
                 <element signature="e#2051#2052#0" expanded="true" />
@@ -130,6 +129,8 @@
       <find>on_use</find>
       <find>Item</find>
       <find>light</find>
+      <find>ai</find>
+      <find>attack</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -148,7 +149,7 @@
     <option name="directoryName" value="uuicIIPp" />
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="562" />
+    <option name="x" value="886" />
     <option name="y" value="27" />
     <option name="width" value="799" />
     <option name="height" value="575" />
@@ -261,7 +262,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="65803000" />
+    <option name="totallyTimeSpent" value="68068000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -281,14 +282,14 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3278867" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.31808278" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32897604" />
       <window_info anchor="bottom" id="Database Changes" order="7" />
       <window_info anchor="bottom" id="Version Control" order="8" weight="0.32897604" />
-      <window_info anchor="bottom" id="Terminal" order="9" weight="0.41503268" />
+      <window_info anchor="bottom" id="Terminal" order="9" weight="0.12200436" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
       <window_info anchor="bottom" id="Docker" order="11" show_stripe_button="false" />
       <window_info anchor="bottom" id="Inspection Results" order="12" weight="0.32953367" />
@@ -379,8 +380,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main.rs">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="242">
-          <caret line="671" column="22" lean-forward="true" selection-start-line="671" selection-start-column="22" selection-end-line="671" selection-end-column="22" />
+        <state relative-caret-position="179">
+          <caret line="151" column="12" lean-forward="true" selection-start-line="151" selection-start-column="12" selection-end-line="151" selection-end-column="12" />
           <folding>
             <element signature="e#2020#2021#0" expanded="true" />
             <element signature="e#2051#2052#0" expanded="true" />

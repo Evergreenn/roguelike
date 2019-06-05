@@ -125,7 +125,13 @@ impl Object {
 
     pub fn attack(&mut self, target: &mut Object, messages: &mut Messages) {
 
-        let damage = self.fighter.map_or(0, |f| f.power) - target.fighter.map_or(0, |f| f.defense);
+        //TODO: add a chance of missing
+
+        let mut damage = self.fighter.map_or(0, |f| f.power) - target.fighter.map_or(0, |f| f.defense);
+
+        if rand::random::<f32>() <0.1 {
+            damage = -1;
+        }
 
         if damage > 0 {
             message(
@@ -136,6 +142,14 @@ impl Object {
             );
 
             target.take_damage(damage, messages);
+        } else if damage < 0 {
+            message(
+                messages,
+                format!("{} miss {}.",
+                        self.name, target.name),
+                colors::ORANGE
+            );
+
         } else {
             message(
                 messages,
