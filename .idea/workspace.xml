@@ -5,7 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ebf02331-1e88-48fb-802d-3e10327d30b1" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
     </list>
@@ -25,8 +24,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main.rs">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="308">
-              <caret line="695" column="35" lean-forward="true" selection-start-line="695" selection-start-column="35" selection-end-line="695" selection-end-column="35" />
+            <state relative-caret-position="242">
+              <caret line="671" column="22" lean-forward="true" selection-start-line="671" selection-start-column="22" selection-end-line="671" selection-end-column="22" />
               <folding>
                 <element signature="e#2020#2021#0" expanded="true" />
                 <element signature="e#2051#2052#0" expanded="true" />
@@ -130,6 +129,7 @@
       <find>set_fps</find>
       <find>on_use</find>
       <find>Item</find>
+      <find>light</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -261,7 +261,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="64340000" />
+    <option name="totallyTimeSpent" value="65803000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -379,8 +379,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main.rs">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="308">
-          <caret line="695" column="35" lean-forward="true" selection-start-line="695" selection-start-column="35" selection-end-line="695" selection-end-column="35" />
+        <state relative-caret-position="242">
+          <caret line="671" column="22" lean-forward="true" selection-start-line="671" selection-start-column="22" selection-end-line="671" selection-end-column="22" />
           <folding>
             <element signature="e#2020#2021#0" expanded="true" />
             <element signature="e#2051#2052#0" expanded="true" />

@@ -666,19 +666,19 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>){
         if !is_blocked(x, y, map, objects){
 
             let dice = rand::random::<f32>();
-            let item = if dice < 0.8 {
-                let mut object = Object::new(x, y, '!', "healing potion", colors::VIOLET, false);
-                object.item = Some(Item::Heal);
-                object
-            } else if dice < 0.5 {
+            let item = if dice > 0.3 && dice < 0.6 {
                 let mut object = Object::new(x, y, '+', "attack scroll", colors::VIOLET, false);
                 object.item = Some(Item::AttackBuff);
                 object
-            }else {
+            } else if dice < 0.3 {
                 let mut object = Object::new(x, y, '#', "scroll of lightning bolt", colors::LIGHT_YELLOW, false, );
-
                 object.item = Some(Item::Lightning);
                 object
+            }else {
+                let mut object = Object::new(x, y, '!', "healing potion", colors::VIOLET, false);
+                object.item = Some(Item::Heal);
+                object
+
             };
 
             objects.push(item);
