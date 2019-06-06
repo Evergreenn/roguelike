@@ -80,6 +80,7 @@ struct Game {
     map: Map,
     log: Messages,
     inventory: Vec<Object>,
+    dungeon_level: u32,
 }
 
 trait MessageLog {
@@ -412,21 +413,32 @@ fn closest_monster(max_range: i32, objects: &mut [Object], tcod: &Tcod) -> Optio
 
 fn ai_take_turn(monster_id: usize, game: &mut Game, objects: &mut [Object], fov_map: &FovMap) {
 
-    let (monster_x, monster_y) = objects[monster_id].pos();
+    use Ai::*;
+    if let Some(ai) = objects[monster_id].ai.take() {
+        let new_ai = match ai {
+            Basic => ai_basic(monster_id, objects, fov_map, game),
+        };
+        objects[monster_id].ai = Some(new_ai);
+    }
+}
 
+fn ai_basic(
+    monster_id: usize,
+    objects: &mut [Object],
+    fov_map: &FovMap,
+    game: &mut Game,
+) -> Ai {
+    let (monster_x, monster_y) = objects[monster_id].pos();
     if fov_map.is_in_fov(monster_x, monster_y) {
         if objects[monster_id].distance_to(&objects[PLAYER]) >= 2.0 {
-
             let (player_x, player_y) = objects[PLAYER].pos();
             move_towards(monster_id, player_x, player_y, &game.map, objects);
-
         } else if objects[PLAYER].fighter.map_or(false, |f| f.hp > 0) {
-
             let (monster, player) = mut_two(monster_id, PLAYER, objects);
             monster.attack(player, game);
-
         }
     }
+    Ai::Basic
 }
 
 fn render_bar(
@@ -569,7 +581,9 @@ struct Fighter {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-struct Ai;
+enum Ai {
+    Basic
+}
 
 fn create_room(room: Rect, map: &mut Map)
 {
@@ -610,7 +624,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>){
                     power: 3,
                     on_death: DeathCallback::Monster,
                 });
-                orc.ai = Some(Ai);
+                orc.ai = Some(Ai::Basic);
                 orc
 
             }else if rand::random::<f32>() < 0.1 {
@@ -622,7 +636,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>){
                     power: 5,
                     on_death: DeathCallback::Monster,
                 });
-                boss.ai = Some(Ai);
+                boss.ai = Some(Ai::Basic);
                 boss
             }else{
                 let mut troll = Object::new(x, y, 'T', "troll", colors::DARKER_GREEN, true);
@@ -633,7 +647,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>){
                     power: 4,
                     on_death: DeathCallback::Monster,
                 });
-                troll.ai = Some(Ai);
+                troll.ai = Some(Ai::Basic);
                 troll
             };
 
@@ -698,6 +712,9 @@ fn use_item (tcod: &mut Tcod, inventory_id: usize, object: &mut [Object], game: 
 fn make_map(objects: &mut Vec<Object>) -> Map {
 
     let mut map = vec![vec![Tile::wall(); MAP_HEIGHT as usize]; MAP_WIDTH as usize];
+    assert_eq!(&objects[PLAYER] as *const _, &objects[0] as *const _);
+    objects.truncate(1);
+
     let mut rooms = vec![];
 
     for _ in 0..MAX_ROOMS {
@@ -735,6 +752,18 @@ fn make_map(objects: &mut Vec<Object>) -> Map {
             rooms.push(new_room);
         }
     }
+
+    let (last_room_x, last_room_y) = rooms[rooms.len() - 1].center();
+    let mut stairs = Object::new(
+        last_room_x,
+        last_room_y,
+        '<',
+        "stairs",
+        colors::WHITE,
+        false,
+    );
+//    stairs.always_visible = true;
+    objects.push(stairs);
 
     map
 }
@@ -808,6 +837,14 @@ fn render_all(
         let defense = objects[PLAYER].fighter.map_or(0,|f |f.defense);
 
         render_bar(&mut tcod.panel, 1, 1, BAR_WIDTH, "HP", hp, max_hp, colors::LIGHT_RED, colors::DARKER_RED);
+
+        tcod.panel.print_ex(
+            1,
+            5,
+            BackgroundFlag::None,
+            TextAlignment::Left,
+            format!("Dungeon level: {}", game.dungeon_level),
+        );
 
         tcod.panel.set_default_foreground(colors::LIGHT_GREY);
         tcod.panel.print_ex(
@@ -935,6 +972,15 @@ fn handle_keys(key: Key, tcod: &mut Tcod, objects: &mut Vec<Object>, game: &mut 
             }
             DidntTakeTurn
         },
+        (Key { code: Spacebar, .. }, true) => {
+            let player_on_stairs = objects
+                .iter()
+                .any(|object| object.pos() == objects[PLAYER].pos() && object.name == "stairs");
+            if player_on_stairs {
+                next_level(tcod, objects, game);
+            }
+            DidntTakeTurn
+        },
 
         _ => DidntTakeTurn
     }
@@ -955,6 +1001,23 @@ fn player_move_or_attack(dx: i32, dy: i32, objects: &mut [Object], game: &mut Ga
             move_by(PLAYER, dx, dy, &game.map, objects);
         }
     }
+}
+
+fn next_level(tcod: &mut Tcod, objects: &mut Vec<Object>, game: &mut Game) {
+    game.log.add(
+        "You take a moment to rest.",
+        colors::VIOLET,
+    );
+    let heal_hp = objects[PLAYER].fighter.map_or(0, |f| f.max_hp / 2);
+    objects[PLAYER].cast(tcod, "heal", heal_hp);
+
+    game.log.add(
+        "After a rare moment of peace, you going further in the dungeon.. As always",
+        colors::RED,
+    );
+    game.dungeon_level += 1;
+    game.map = make_map(objects);
+    initialise_fov(&game.map, tcod);
 }
 
 fn initialise_fov(map: &Map, tcod: &mut Tcod) {
@@ -1003,6 +1066,7 @@ fn new_game(tcod: &mut Tcod) -> (Vec<Object>, Game) {
         map: make_map(&mut objects),
         log: vec![],
         inventory: vec![],
+        dungeon_level: 1
     };
 
     initialise_fov(&game.map, tcod);

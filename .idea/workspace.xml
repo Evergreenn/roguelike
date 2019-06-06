@@ -6,8 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="ebf02331-1e88-48fb-802d-3e10327d30b1" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/savegame" beforeDir="false" afterPath="$PROJECT_DIR$/savegame" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -26,8 +25,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main.rs">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="316">
-              <caret line="1095" column="24" selection-start-line="1095" selection-start-column="24" selection-end-line="1095" selection-end-column="24" />
+            <state relative-caret-position="228">
+              <caret line="585" column="1" lean-forward="true" selection-start-line="585" selection-start-column="1" selection-end-line="585" selection-end-column="1" />
               <folding>
                 <element signature="e#2020#2021#0" expanded="true" />
                 <element signature="e#2051#2052#0" expanded="true" />
@@ -105,11 +104,7 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>println!</find>
-      <find>player_death</find>
-      <find>println</find>
       <find>DidntTakeTurn</find>
-      <find>Object</find>
       <find>place_object</find>
       <find>UseU</find>
       <find>pick</find>
@@ -117,7 +112,6 @@
       <find>assert!</find>
       <find>ai_take_turn</find>
       <find>you die</find>
-      <find>heal</find>
       <find>format!</find>
       <find>7</find>
       <find>player</find>
@@ -135,6 +129,11 @@
       <find>initialise_fov</find>
       <find>Item</find>
       <find>Serialize</find>
+      <find>Object</find>
+      <find>heal</find>
+      <find>cast</find>
+      <find>stair</find>
+      <find>Ai</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -153,10 +152,10 @@
     <option name="directoryName" value="uuicIIPp" />
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="918" />
-    <option name="y" value="27" />
-    <option name="width" value="799" />
-    <option name="height" value="829" />
+    <option name="x" value="130" />
+    <option name="y" value="138" />
+    <option name="width" value="1657" />
+    <option name="height" value="942" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -266,7 +265,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="74676000" />
+    <option name="totallyTimeSpent" value="77003000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -387,8 +386,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main.rs">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="316">
-          <caret line="1095" column="24" selection-start-line="1095" selection-start-column="24" selection-end-line="1095" selection-end-column="24" />
+        <state relative-caret-position="228">
+          <caret line="585" column="1" lean-forward="true" selection-start-line="585" selection-start-column="1" selection-end-line="585" selection-end-column="1" />
           <folding>
             <element signature="e#2020#2021#0" expanded="true" />
             <element signature="e#2051#2052#0" expanded="true" />
