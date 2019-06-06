@@ -52,6 +52,12 @@ const PLAYER_MAX_ATTACK:i32 = 9;
 const LIGHTNING_DAMAGE:i32 = 20;
 const LIGHTNING_RANGE:i32 = 5;
 
+const LEVEL_UP_BASE: i32 = 200;
+const LEVEL_UP_FACTOR: i32 = 150;
+
+const LEVEL_SCREEN_WIDTH: i32 = 40;
+const CHARACTER_SCREEN_WIDTH: i32 = 30;
+
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Object {
@@ -65,6 +71,7 @@ struct Object {
     fighter: Option<Fighter>,
     ai: Option<Ai>,
     item:Option<Item>,
+    level: i32,
 }
 
 struct Tcod {
@@ -106,7 +113,8 @@ impl Object {
             alive:false,
             fighter: None,
             ai: None,
-            item:None,
+            item: None,
+            level: 1,
         }
     }
 
@@ -130,7 +138,7 @@ impl Object {
         ((dx.pow(2) + dy.pow(2)) as f32).sqrt()
     }
 
-    pub fn take_damage(&mut self, damage: i32, game: &mut Game) {
+    pub fn take_damage(&mut self, damage: i32, game: &mut Game) -> Option<i32> {
 
         //borrowed
         if let Some(fighter) = self.fighter.as_mut() {
@@ -144,13 +152,13 @@ impl Object {
             if fighter.hp <= 0 {
                 self.alive = false;
                 fighter.on_death.callback(self, game);
+                return Some(fighter.xp);
             }
         }
+        None
     }
 
     pub fn attack(&mut self, target: &mut Object, game: &mut Game) {
-
-        //TODO: add a chance of missing
 
         let mut damage = self.fighter.map_or(0, |f| f.power) - target.fighter.map_or(0, |f| f.defense);
 
@@ -161,7 +169,9 @@ impl Object {
         if damage > 0 {
             game.log.add(format!("{} attacks {} for {} hit points.", self.name, target.name, damage), colors::WHITE);
 
-            target.take_damage(damage, game);
+            if let Some(xp) = target.take_damage(damage, game) {
+                self.fighter.as_mut().unwrap().xp += xp;
+            }
         } else if damage < 0 {
             game.log.add(format!("{} miss {}.", self.name, target.name), colors::ORANGE);
         } else {
@@ -184,7 +194,7 @@ impl Object {
             "attack_buff" =>
                 if let Some(ref mut fighter) = self.fighter {
                     fighter.power += amount;
-                    if fighter.power > PLAYER_MAX_ATTACK{
+                    if fighter.power >= PLAYER_MAX_ATTACK{
                         fighter.power = PLAYER_MAX_ATTACK;
                     }
                 }
@@ -358,8 +368,8 @@ fn cast_heal(tcod: &mut Tcod,_inventory_id: usize, objects: &mut [Object], game:
 fn cast_attack_buff(tcod: &mut Tcod, _inventory_id: usize, objects: &mut [Object], game: &mut Game) -> UseResult{
 
     if let Some(fighter) = objects[PLAYER].fighter {
-        if fighter.power == PLAYER_MAX_ATTACK {
-            game.log.add("You are already at max attack.", colors::RED);
+        if fighter.power >= PLAYER_MAX_ATTACK {
+            game.log.add("your attack lvl is too high for this item level", colors::RED);
             return UseResult::Cancelled;
         }
         objects[PLAYER].cast(tcod, "attack_buff", ATTACK_BUFF);
@@ -383,11 +393,55 @@ fn cast_lightning(
                  The damage is {} hit points.",
             objects[monster_id].name, LIGHTNING_DAMAGE), colors::LIGHT_BLUE,);
 
-        objects[monster_id].take_damage(LIGHTNING_DAMAGE, game);
+        if let Some(xp) = objects[monster_id].take_damage(LIGHTNING_DAMAGE, game) {
+            objects[PLAYER].fighter.as_mut().unwrap().xp += xp;
+        }
+
         UseResult::UsedUp
     } else {
         game.log.add("No enemy is close enough to strike.", colors::RED);
         UseResult::Cancelled
+    }
+}
+
+fn level_up(objects: &mut [Object], game: &mut Game, tcod: &mut Tcod){
+    let player = &mut objects[PLAYER];
+    let level_up_xp = LEVEL_UP_BASE + player.level * LEVEL_UP_FACTOR;
+
+    if player.fighter.as_ref().map_or(0, |f| f.xp) >= level_up_xp {
+        player.level += 1;
+        game.log.add(format!("You reached level {}!", player.level), colors::YELLOW);
+
+        let fighter = player.fighter.as_mut().unwrap();
+        let mut choice = None;
+        while choice.is_none() {
+
+            choice = menu(
+                "Level up! Choose a stat to raise:\n",
+                &[
+                    format!("Constitution (+20 HP, from {})", fighter.max_hp),
+                    format!("Strength (+1 attack, from {})", fighter.power),
+                    format!("Agility (+1 defense, from {})", fighter.defense),
+                ],
+                LEVEL_SCREEN_WIDTH,
+                &mut tcod.root,
+            );
+        }
+        fighter.xp -= level_up_xp;
+        match choice.unwrap() {
+            0 => {
+                fighter.max_hp += 20;
+                fighter.hp += 20;
+            }
+            1 => {
+                fighter.power += 1;
+            }
+            2 => {
+                fighter.defense += 1;
+            }
+            _ => unreachable!(),
+        }
+
     }
 }
 
@@ -562,7 +616,7 @@ fn player_death(player: &mut Object, game: &mut Game) {
 
 fn monster_death(monster: &mut Object, game: &mut Game) {
 
-    game.log.add(format!("PAF! {} is dead!", monster.name), colors::RED);
+    game.log.add(format!("PAF! {} is dead! You gain {}", monster.name, monster.fighter.unwrap().xp), colors::ORANGE);
     monster.char = '%';
     monster.color = colors::DARK_RED;
     monster.blocks = false;
@@ -578,6 +632,7 @@ struct Fighter {
     defense: i32,
     power: i32,
     on_death: DeathCallback,
+    xp: i32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -623,6 +678,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>){
                     defense: 0,
                     power: 3,
                     on_death: DeathCallback::Monster,
+                    xp:35
                 });
                 orc.ai = Some(Ai::Basic);
                 orc
@@ -635,6 +691,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>){
                     defense: 4,
                     power: 5,
                     on_death: DeathCallback::Monster,
+                    xp:100
                 });
                 boss.ai = Some(Ai::Basic);
                 boss
@@ -646,6 +703,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>){
                     defense: 2,
                     power: 4,
                     on_death: DeathCallback::Monster,
+                    xp:55
                 });
                 troll.ai = Some(Ai::Basic);
                 troll
@@ -981,6 +1039,29 @@ fn handle_keys(key: Key, tcod: &mut Tcod, objects: &mut Vec<Object>, game: &mut 
             }
             DidntTakeTurn
         },
+        (Key { printable: 'c', .. }, true) => {
+
+            let player = &objects[PLAYER];
+            let level = player.level;
+            let level_up_xp = LEVEL_UP_BASE + player.level * LEVEL_UP_FACTOR;
+            if let Some(fighter) = player.fighter.as_ref() {
+                let msg = format!(
+                    "Character information
+
+Level: {}
+Experience: {}
+Experience to level up: {}
+
+Maximum HP: {}
+Attack: {}
+Defense: {}",
+                    level, fighter.xp, level_up_xp, fighter.max_hp, fighter.power, fighter.defense
+                );
+                msgbox(&msg, CHARACTER_SCREEN_WIDTH, &mut tcod.root);
+            }
+
+            DidntTakeTurn
+        }
 
         _ => DidntTakeTurn
     }
@@ -1056,7 +1137,8 @@ fn new_game(tcod: &mut Tcod) -> (Vec<Object>, Game) {
         hp: 30,
         defense: 2,
         power: 5,
-        on_death: DeathCallback::Player
+        on_death: DeathCallback::Player,
+        xp:0
     });
     player.alive= true;
 
@@ -1094,6 +1176,8 @@ fn play_game(objects: &mut Vec<Object>, game: &mut Game, tcod: &mut Tcod) {
         render_all(tcod, &objects, game, fov_recompute);
 
         tcod.root.flush();
+
+        level_up(objects, game, tcod);
 
         let player: &mut Object = &mut objects[PLAYER];
         previous_player_position = player.pos();
