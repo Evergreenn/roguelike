@@ -183,7 +183,7 @@ impl Object {
         }
     }
 
-    pub fn cast(&mut self, tcod: &mut Tcod, cast_type: &str, amount: i32) {
+    pub fn cast(&mut self, _tcod: &mut Tcod, cast_type: &str, amount: i32) {
 
         match cast_type.as_ref() {
 
@@ -673,10 +673,6 @@ fn create_v_tunnel(y1: i32, y2: i32, x: i32, map: &mut Map) {
     }
 }
 
-fn scale_monsters_lvl(game: &mut Game){
-
-}
-
 fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
 
     let max_monsters = from_dungeon_level(
@@ -715,9 +711,9 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
         let y = rand::thread_rng().gen_range(room.y1 + 1, room.y2);
 
 
-        let mut choices = ["orc", "troll", "boss"];
+        let choices = ["orc", "troll", "boss"];
         let weights = [6,   troll_chance,   1];
-        let mut monster_choice = WeightedIndex::new(&weights).unwrap();
+        let monster_choice = WeightedIndex::new(&weights).unwrap();
 
 
         if !is_blocked(x, y, map, objects){
@@ -786,7 +782,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
         let y = rand::thread_rng().gen_range(room.y1 +1 , room.y2);
 
 
-        let mut item_chances = [Item::Heal, Item::Lightning, Item::AttackBuff];
+        let item_chances = [Item::Heal, Item::Lightning, Item::AttackBuff];
         let weights = [
             35,
             from_dungeon_level(
@@ -804,12 +800,12 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
                 level,
             ),
         ];
-        let mut item_choice = WeightedIndex::new(&weights).unwrap();
+        let item_choice = WeightedIndex::new(&weights).unwrap();
 
 
         if !is_blocked(x, y, map, objects){
 
-            let mut item = match item_chances[item_choice.sample(&mut rand::thread_rng())] {
+            let item = match item_chances[item_choice.sample(&mut rand::thread_rng())] {
                 Item::Heal => {
                     let mut object = Object::new(x, y, '!', "healing potion", colors::VIOLET, false);
                     object.item = Some(Item::Heal);
@@ -902,7 +898,7 @@ fn make_map(objects: &mut Vec<Object>, level: u32) -> Map {
     }
 
     let (last_room_x, last_room_y) = rooms[rooms.len() - 1].center();
-    let mut stairs = Object::new(
+    let stairs = Object::new(
         last_room_x,
         last_room_y,
         '<',
