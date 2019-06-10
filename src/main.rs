@@ -872,6 +872,24 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
         level,
     );
 
+    let boss_chance = from_dungeon_level(
+        &[
+            Transition {
+                level: 3,
+                value: 10,
+            },
+            Transition {
+                level: 5,
+                value: 15,
+            },
+            Transition {
+                level: 7,
+                value: 20,
+            },
+        ],
+        level,
+    );
+
 
     let num_monsters = rand::thread_rng().gen_range(0, max_monsters + 1);
 
@@ -1418,7 +1436,7 @@ fn new_game(tcod: &mut Tcod) -> (Vec<Object>, Game) {
         base_max_hp: 100,
         hp: 100,
         base_defense: 1,
-        base_power: 4,
+        base_power: 3,
         on_death: DeathCallback::Player,
         xp:0
     });
@@ -1432,6 +1450,17 @@ fn new_game(tcod: &mut Tcod) -> (Vec<Object>, Game) {
         inventory: vec![],
         dungeon_level: 1
     };
+
+    let mut dagger = Object::new(0, 0, '-', "dagger", colors::SKY, false);
+    dagger.item = Some(Item::Sword);
+    dagger.equipment = Some(Equipment {
+        equipped: true,
+        slot: Slot::LeftHand,
+        max_hp_bonus: 0,
+        defense_bonus: 0,
+        power_bonus: 2
+    });
+    game.inventory.push(dagger);
 
     initialise_fov(&game.map, tcod);
 
