@@ -490,10 +490,22 @@ fn toggle_equipment(_tcod: &mut Tcod, inventory_id: usize, _objects: &mut [Objec
     if equipment.equipped {
         game.inventory[inventory_id].dequip(&mut game.log);
     }else{
+        if let Some(current) = get_equipped_in_slot(equipment.slot, &game.inventory) {
+            game.inventory[current].dequip(&mut game.log);
+        }
         game.inventory[inventory_id].equip(&mut game.log);
     }
 
     UseResult::UseAndKept
+}
+
+fn get_equipped_in_slot (slot: Slot, inventory: &[Object]) -> Option<usize> {
+    for (inventory_id, item) in inventory.iter().enumerate() {
+        if item.equipment.as_ref().map_or(false,|e| e.equipped && e.slot == slot){
+            return Some(inventory_id)
+        }
+    }
+    None
 }
 
 fn level_up(objects: &mut [Object], game: &mut Game, tcod: &mut Tcod){
@@ -640,6 +652,14 @@ fn pick_item_up(object_id:usize, objects: &mut Vec<Object>, game: &mut Game){
 
         game.inventory.push(item);
     }
+}
+
+fn drop_item(inventory_id: usize, objects: &mut Vec<Object>, game: &mut Game){
+
+    let mut item = game.inventory.remove(inventory_id);
+    item.set_pos(objects[PLAYER].x, objects[PLAYER].y);
+    game.log.add(format!("You dropped a {}", item.name), colors::YELLOW);
+    objects.push(item);
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -879,7 +899,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
                 }],
                 level,
             ),
-            0
+            1000
         ];
         let item_choice = WeightedIndex::new(&weights).unwrap();
 
@@ -1235,6 +1255,17 @@ Defense: {}",
                 msgbox(&msg, CHARACTER_SCREEN_WIDTH, &mut tcod.root);
             }
 
+            DidntTakeTurn
+        }
+        (Key { printable: 'd', .. }, true) => {
+            let inventory_index = inventory_menu(
+                &game.inventory,
+                "Press the key next to an item to drop it, or any other to cancel.\n'",
+                &mut tcod.root,
+            );
+            if let Some(inventory_index) = inventory_index {
+                drop_item(inventory_index, objects, game);
+            }
             DidntTakeTurn
         }
 
