@@ -969,14 +969,13 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
                 }],
                 level,
             ),
-//            from_dungeon_level(
-//                &[Transition {
-//                    level: 3,
-//                    value: 5,
-//                }],
-//                level,
-//            ),
-            1000
+            from_dungeon_level(
+                &[Transition {
+                    level: 3,
+                    value: 5,
+                }],
+                level,
+            ),
         ];
         let item_choice = WeightedIndex::new(&weights).unwrap();
 
