@@ -108,6 +108,16 @@ enum Slot {
     Chest
 }
 
+impl std::fmt::Display for Slot {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match *self {
+            Slot::LeftHand => write!(f, "left hand"),
+            Slot::RightHand => write!(f, "right hand"),
+            Slot::Chest => write!(f, "chest"),
+        }
+    }
+}
+
 trait MessageLog {
     fn add<T: Into<String>>(&mut self, message: T, color: Color);
 }
@@ -257,7 +267,7 @@ impl Object {
             );
             return;
         };
-        if let Some(mut equipment) = self.equipment {
+        if let Some(ref mut equipment) = self.equipment {
             if equipment.equipped {
                 equipment.equipped = false;
                 log.add(
@@ -412,8 +422,17 @@ fn inventory_menu(inventory: &[Object], header: &str, root: &mut Root) -> Option
     let options = if inventory.len() == 0 {
         vec!["Inventory is empty.".into()]
     } else {
-        inventory.iter().map(|item| { item.name.clone() }).collect()
-    };
+        inventory
+            .iter()
+            .map(|item| {
+                match item.equipment {
+                    Some(equipment) if equipment.equipped => {
+                        format!("{} (on {})", item.name, equipment.slot)
+                    }
+                    _ => item.name.clone(),
+                }
+            })
+            .collect()    };
 
     let inventory_index = menu(header, &options, INVENTORY_WIDTH, root);
 
@@ -487,7 +506,7 @@ fn toggle_equipment(_tcod: &mut Tcod, inventory_id: usize, _objects: &mut [Objec
         None => return UseResult::Cancelled,
     };
 
-    if equipment.equipped {
+    if equipment.equipped == true {
         game.inventory[inventory_id].dequip(&mut game.log);
     }else{
         if let Some(current) = get_equipped_in_slot(equipment.slot, &game.inventory) {
@@ -657,6 +676,9 @@ fn pick_item_up(object_id:usize, objects: &mut Vec<Object>, game: &mut Game){
 fn drop_item(inventory_id: usize, objects: &mut Vec<Object>, game: &mut Game){
 
     let mut item = game.inventory.remove(inventory_id);
+    if item.equipment.is_some() {
+        item.dequip(&mut game.log);
+    }
     item.set_pos(objects[PLAYER].x, objects[PLAYER].y);
     game.log.add(format!("You dropped a {}", item.name), colors::YELLOW);
     objects.push(item);
