@@ -55,6 +55,11 @@ const LIGHTNING_RANGE:i32 = 5;
 const LEVEL_UP_BASE: i32 = 200;
 const LEVEL_UP_FACTOR: i32 = 150;
 
+const MONSTER_LEVEL_UP_BASE: u32 = 20;
+const MONSTER_ATTACK_LEVEL_UP_BASE: u32 = 5;
+const MONSTER_DEFENSE_LEVEL_UP_BASE: u32 = 5;
+const MONSTER_LEVEL_UP_FACTOR: i32 = 2;
+
 const LEVEL_SCREEN_WIDTH: i32 = 40;
 const CHARACTER_SCREEN_WIDTH: i32 = 30;
 
@@ -357,13 +362,16 @@ enum Item {
     Heal,
     AttackBuff,
     Lightning,
-    Sword
+    Sword,
+    Chest,
+    Targe,
 }
 
 enum UseResult {
     UsedUp,
     Cancelled,
-    UseAndKept
+    UseAndKept,
+    UseAndTakeTurn
 }
 
 type Map = Vec<Vec<Tile>>;
@@ -543,7 +551,7 @@ fn cast_lightning(
             objects[PLAYER].fighter.as_mut().unwrap().xp += xp;
         }
 
-        UseResult::UsedUp
+        UseResult::UseAndTakeTurn
     } else {
         game.log.add("No enemy is close enough to strike.", colors::RED);
         UseResult::Cancelled
@@ -852,57 +860,55 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
             Transition { level: 1, value: 2 },
             Transition { level: 4, value: 3 },
             Transition { level: 6, value: 5 },
+            Transition { level: 10, value: 7 },
+        ],
+        level,
+    );
+
+    let poulet_chance = from_dungeon_level(
+        &[
+            Transition {level: 1, value: 60,},
+            Transition {level: 2, value: 30,},
+            Transition {level: 4, value: 0,},
+        ],
+        level,
+    );
+
+    let orc_chance = from_dungeon_level(
+        &[
+            Transition {level: 2, value: 30,},
+            Transition {level: 5, value: 30,},
         ],
         level,
     );
 
     let troll_chance = from_dungeon_level(
         &[
-            Transition {
-                level: 3,
-                value: 15,
-            },
-            Transition {
-                level: 5,
-                value: 30,
-            },
-            Transition {
-                level: 7,
-                value: 60,
-            },
+            Transition {level: 4, value: 15,},
+            Transition {level: 5, value: 30,},
+            Transition {level: 7, value: 60,},
         ],
         level,
     );
 
     let boss_chance = from_dungeon_level(
         &[
-            Transition {
-                level: 3,
-                value: 10,
-            },
-            Transition {
-                level: 5,
-                value: 15,
-            },
-            Transition {
-                level: 7,
-                value: 20,
-            },
+            Transition {level: 3, value: 10,},
+            Transition {level: 5, value: 15,},
+            Transition {level: 7, value: 20,},
         ],
         level,
     );
 
-
     let num_monsters = rand::thread_rng().gen_range(0, max_monsters + 1);
-
 
     for _ in 0..num_monsters {
         let x = rand::thread_rng().gen_range(room.x1 + 1, room.x2);
         let y = rand::thread_rng().gen_range(room.y1 + 1, room.y2);
 
 
-        let choices = ["orc", "troll", "boss"];
-        let weights = [60,   troll_chance,   boss_chance];
+        let choices = ["poulet","orc", "troll", "boss"];
+        let weights = [poulet_chance, orc_chance,   troll_chance,   boss_chance];
         let monster_choice = WeightedIndex::new(&weights).unwrap();
 
 
@@ -910,25 +916,44 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
 
             let mut monster = match choices[monster_choice.sample(&mut rand::thread_rng())] {
                 "orc" => {
-                    let mut orc= Object::new(x, y, 'p', "orc", colors::LIGHT_GREEN, true);
-                       orc.fighter = Some(Fighter {
-                        base_max_hp: 20,
-                        hp: 20,
-                        base_defense: 0,
-                        base_power: 4,
+                    let mut orc= Object::new(x, y, 'o', "orc", colors::LIGHT_GREEN, true);
+                    let hp_multiplier = ((MONSTER_LEVEL_UP_BASE as i32 + level as i32 ) / MONSTER_LEVEL_UP_FACTOR) as i32;
+                    let attack_multiplier = ((MONSTER_ATTACK_LEVEL_UP_BASE as i32 + level as i32 ) / MONSTER_LEVEL_UP_FACTOR) as i32;
+                    let defense_multiplier = ((MONSTER_DEFENSE_LEVEL_UP_BASE as i32 + level as i32 ) / MONSTER_LEVEL_UP_FACTOR) as i32;
+                    orc.fighter = Some(Fighter {
+                        base_max_hp: 10 + hp_multiplier as i32,
+                        hp: 10 + hp_multiplier as i32,
+                        base_defense: defense_multiplier,
+                        base_power: 4 + attack_multiplier as i32,
                         on_death: DeathCallback::Monster,
                         xp:35
                     });
                     orc.ai = Some(Ai::Basic);
                     orc
                 }
+                "poulet" => {
+                    let mut poulet= Object::new(x, y, 'p', "poulet", colors::GREY, true);
+                    poulet.fighter = Some(Fighter {
+                        base_max_hp: 15,
+                        hp: 15,
+                        base_defense: 0,
+                        base_power: 3,
+                        on_death: DeathCallback::Monster,
+                        xp:20
+                    });
+                    poulet.ai = Some(Ai::Basic);
+                    poulet
+                }
                 "troll" => {
+                    let hp_multiplier = ((MONSTER_LEVEL_UP_BASE as i32 + level as i32 ) / MONSTER_LEVEL_UP_FACTOR) as i32;
+                    let attack_multiplier = ((MONSTER_ATTACK_LEVEL_UP_BASE as i32 + level as i32 ) / MONSTER_LEVEL_UP_FACTOR) as i32;
+                    let defense_multiplier = ((MONSTER_DEFENSE_LEVEL_UP_BASE as i32 + level as i32 ) / MONSTER_LEVEL_UP_FACTOR) as i32;
                     let mut troll = Object::new(x, y, 'T', "troll", colors::LIGHT_GREEN, true);
                     troll.fighter = Some(Fighter {
-                        base_max_hp: 30,
-                        hp: 30,
-                        base_defense: 2,
-                        base_power: 8,
+                        base_max_hp: 15 + hp_multiplier as i32,
+                        hp: 15 + hp_multiplier as i32,
+                        base_defense: 1 + defense_multiplier,
+                        base_power: 5 + attack_multiplier,
                         on_death: DeathCallback::Monster,
                         xp:55
                     });
@@ -936,12 +961,15 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
                     troll
                 }
                 "boss" => {
+                    let hp_multiplier = ((MONSTER_LEVEL_UP_BASE as i32 + level as i32 ) / MONSTER_LEVEL_UP_FACTOR) as i32;
+                    let attack_multiplier = ((MONSTER_ATTACK_LEVEL_UP_BASE as i32 + level as i32 ) / MONSTER_LEVEL_UP_FACTOR) as i32;
+                    let defense_multiplier = ((MONSTER_DEFENSE_LEVEL_UP_BASE as i32 + level as i32 ) / MONSTER_LEVEL_UP_FACTOR) as i32;
                     let mut boss = Object::new(x, y, 'W', "BOSS", colors::RED, true);
                     boss.fighter = Some(Fighter{
-                        base_max_hp: 70,
-                        hp: 70,
-                        base_defense: 4,
-                        base_power: 12,
+                        base_max_hp: 60 + hp_multiplier as i32,
+                        hp: 60 + hp_multiplier as i32,
+                        base_defense: 4 + defense_multiplier,
+                        base_power: 8 +attack_multiplier,
                         on_death: DeathCallback::Monster,
                         xp:110
                     });
@@ -971,21 +999,23 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
         let x = rand::thread_rng().gen_range(room.x1 +1 , room.x2);
         let y = rand::thread_rng().gen_range(room.y1 +1 , room.y2);
 
-        let item_chances = [Item::Heal, Item::Lightning, Item::Sword];
+        let item_chances = [Item::Heal, Item::Lightning, Item::Sword, Item::Targe, Item::Chest];
         let weights = [
             35,
             from_dungeon_level(
-                &[Transition {
-                    level: 4,
-                    value: 25,
-                }],
+                &[Transition {level: 4, value: 10,}],
                 level,
             ),
             from_dungeon_level(
-                &[Transition {
-                    level: 3,
-                    value: 5,
-                }],
+                &[Transition {level: 3,value: 5,}],
+                level,
+            ),
+            from_dungeon_level(
+                &[Transition {level: 6,value: 5,}],
+                level,
+            ),
+            from_dungeon_level(
+                &[Transition {level: 8,value: 5,}],
                 level,
             ),
         ];
@@ -1016,6 +1046,17 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
                     object.equipment = Some(Equipment{equipped: false, slot: Slot::RightHand, power_bonus: 3, defense_bonus: 0, max_hp_bonus: 0});
                     object
                 }
+                Item::Chest => {
+                    let mut object = Object::new(x, y, '░', "chainmail armor", colors::COPPER, false);
+                    object.item = Some(Item::Chest);
+                    object.equipment = Some(Equipment{equipped: false, slot: Slot::Chest, power_bonus: 0, defense_bonus: 2, max_hp_bonus: 10});
+                    object
+                }Item::Targe => {
+                    let mut object = Object::new(x, y, '◙', "targe", colors::DARK_HAN, false);
+                    object.item = Some(Item::Targe);
+                    object.equipment = Some(Equipment{equipped: false, slot: Slot::LeftHand, power_bonus: 0, defense_bonus: 1, max_hp_bonus: 0});
+                    object
+                }
 
                 _ => unreachable!()
             };
@@ -1026,27 +1067,40 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
     }
 }
 
-fn use_item (tcod: &mut Tcod, inventory_id: usize, object: &mut [Object], game: &mut Game){
+fn use_item (tcod: &mut Tcod, inventory_id: usize, object: &mut [Object], game: &mut Game) -> PlayerAction{
     use Item::*;
+    use PlayerAction::*;
+
     if let Some(item) = game.inventory[inventory_id].item {
         let on_use = match item {
             Heal => cast_heal,
             AttackBuff => cast_attack_buff,
             Lightning => cast_lightning,
             Sword => toggle_equipment,
+            Chest => toggle_equipment,
+            Targe => toggle_equipment,
         };
 
         match on_use(tcod, inventory_id, object, game){
             UseResult::UsedUp => {
                 &mut game.inventory.remove(inventory_id);
+                DidntTakeTurn
             }
-            UseResult::UseAndKept => {},
+            UseResult::UseAndTakeTurn => {
+                &mut game.inventory.remove(inventory_id);
+                TookTurn
+            },
+            UseResult::UseAndKept => {
+                DidntTakeTurn
+            },
             UseResult::Cancelled => {
                 game.log.add("Cancelled", colors::WHITE);
+                DidntTakeTurn
             }
         }
     } else {
         game.log.add(format!("The {} cannot be used.", game.inventory[inventory_id].name),colors::RED);
+        DidntTakeTurn
     }
 }
 
@@ -1312,7 +1366,7 @@ fn handle_keys(key: Key, tcod: &mut Tcod, objects: &mut Vec<Object>, game: &mut 
                 &mut tcod.root);
 
             if let Some(inventory_index) = inventory_index {
-                use_item(tcod, inventory_index, objects, game);
+                return use_item(tcod, inventory_index, objects, game);
             }
             DidntTakeTurn
         },
@@ -1433,7 +1487,7 @@ fn new_game(tcod: &mut Tcod) -> (Vec<Object>, Game) {
         base_max_hp: 100,
         hp: 100,
         base_defense: 1,
-        base_power: 3,
+        base_power: 4,
         on_death: DeathCallback::Player,
         xp:0
     });
@@ -1455,7 +1509,7 @@ fn new_game(tcod: &mut Tcod) -> (Vec<Object>, Game) {
         slot: Slot::LeftHand,
         max_hp_bonus: 0,
         defense_bonus: 0,
-        power_bonus: 2
+        power_bonus: 3
     });
     game.inventory.push(dagger);
 
