@@ -73,6 +73,7 @@ struct Object {
     item:Option<Item>,
     level: i32,
     equipment: Option<Equipment>,
+    always_visible: bool,
 }
 
 struct Tcod {
@@ -148,6 +149,7 @@ impl Object {
             item: None,
             level: 1,
             equipment: None,
+            always_visible: false,
         }
     }
 
@@ -900,7 +902,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
 
 
         let choices = ["orc", "troll", "boss"];
-        let weights = [60,   troll_chance,   10];
+        let weights = [60,   troll_chance,   boss_chance];
         let monster_choice = WeightedIndex::new(&weights).unwrap();
 
 
@@ -941,7 +943,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
                         base_defense: 4,
                         base_power: 12,
                         on_death: DeathCallback::Monster,
-                        xp:100
+                        xp:110
                     });
                     boss.ai = Some(Ai::Basic);
                     boss
@@ -969,21 +971,13 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
         let x = rand::thread_rng().gen_range(room.x1 +1 , room.x2);
         let y = rand::thread_rng().gen_range(room.y1 +1 , room.y2);
 
-
-        let item_chances = [Item::Heal, Item::Lightning, Item::AttackBuff, Item::Sword];
+        let item_chances = [Item::Heal, Item::Lightning, Item::Sword];
         let weights = [
             35,
             from_dungeon_level(
                 &[Transition {
                     level: 4,
                     value: 25,
-                }],
-                level,
-            ),
-            from_dungeon_level(
-                &[Transition {
-                    level: 2,
-                    value: 15,
                 }],
                 level,
             ),
@@ -1000,7 +994,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
 
         if !is_blocked(x, y, map, objects){
 
-            let item = match item_chances[item_choice.sample(&mut rand::thread_rng())] {
+            let mut item = match item_chances[item_choice.sample(&mut rand::thread_rng())] {
                 Item::Heal => {
                     let mut object = Object::new(x, y, '!', "healing potion", colors::VIOLET, false);
                     object.item = Some(Item::Heal);
@@ -1025,7 +1019,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
 
                 _ => unreachable!()
             };
-
+            item.always_visible = true;
             objects.push(item);
 
         }
@@ -1101,7 +1095,7 @@ fn make_map(objects: &mut Vec<Object>, level: u32) -> Map {
     }
 
     let (last_room_x, last_room_y) = rooms[rooms.len() - 1].center();
-    let stairs = Object::new(
+    let mut stairs = Object::new(
         last_room_x,
         last_room_y,
         '<',
@@ -1109,7 +1103,7 @@ fn make_map(objects: &mut Vec<Object>, level: u32) -> Map {
         colors::WHITE,
         false,
     );
-//    stairs.always_visible = true;
+    stairs.always_visible = true;
     objects.push(stairs);
 
     map
@@ -1152,7 +1146,10 @@ fn render_all(
 
     let mut to_draw: Vec<_> = objects
         .iter()
-        .filter(|o| tcod.fov.is_in_fov(o.x, o.y))
+        .filter(|o| {
+            tcod.fov.is_in_fov(o.x, o.y)
+                || (o.always_visible && game.map[o.x as usize][o.y as usize].explored)
+        })
         .collect();
     to_draw.sort_by(|o1, o2| o1.blocks.cmp(&o2.blocks));
 
@@ -1328,7 +1325,7 @@ fn handle_keys(key: Key, tcod: &mut Tcod, objects: &mut Vec<Object>, game: &mut 
             }
             DidntTakeTurn
         },
-        (Key { printable: 'c', .. }, true) => {
+        (Key { code: Tab, .. }, true) => {
 
             let player = &objects[PLAYER];
             let level = player.level;
