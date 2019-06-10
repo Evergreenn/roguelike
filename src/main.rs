@@ -879,7 +879,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
                 }],
                 level,
             ),
-            10000
+            0
         ];
         let item_choice = WeightedIndex::new(&weights).unwrap();
 
