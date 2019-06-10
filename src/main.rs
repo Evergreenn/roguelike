@@ -219,7 +219,7 @@ impl Object {
 
             "heal" =>
 
-                if let Some(mut fighter) = self.fighter {
+                if let Some(ref mut fighter) = self.fighter {
                     fighter.hp += amount;
                     if fighter.hp > max_hp {
                         fighter.hp = max_hp;
