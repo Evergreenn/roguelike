@@ -71,6 +71,7 @@ struct Object {
     ai: Option<Ai>,
     item:Option<Item>,
     level: i32,
+    equipment: Option<Equipment>,
 }
 
 struct Tcod {
@@ -92,6 +93,19 @@ struct Game {
 struct Transition {
     level: u32,
     value: u32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+struct Equipment {
+    slot: Slot,
+    equipped: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+enum Slot {
+    RightHand,
+    LeftHand,
+    Chest
 }
 
 trait MessageLog {
@@ -119,6 +133,7 @@ impl Object {
             ai: None,
             item: None,
             level: 1,
+            equipment: None,
         }
     }
 
@@ -206,8 +221,56 @@ impl Object {
             __ => ()
 
         }
+    }
 
+    pub fn equip (&mut self, log: &mut Vec<(String, Color)> ){
 
+        if self.item.is_none(){
+            log.add(
+                format!("Can't equip {:?} because it's not an Item.", self),
+                colors::RED,
+            );
+            return;
+        }
+
+        if let Some(ref mut equipment) = self.equipment {
+            if !equipment.equipped {
+                equipment.equipped = true;
+                log.add(
+                    format!("Equipped {} on {:?}.", self.name, equipment.slot),
+                    colors::LIGHT_GREEN,
+                );
+            }
+        } else {
+            log.add(
+                format!("Can't equip {:?} because it's not an Equipment.", self),
+                colors::RED,
+            );
+        }
+    }
+
+    pub fn dequip(&mut self, log: &mut Vec<(String, Color)>) {
+        if self.item.is_none() {
+            log.add(
+                format!("Can't dequip {:?} because it's not an Item.", self),
+                colors::RED,
+            );
+            return;
+        };
+        if let Some(mut equipment) = self.equipment {
+            if equipment.equipped {
+                equipment.equipped = false;
+                log.add(
+                    format!("Dequipped {} from {:?}.", self.name, equipment.slot),
+                    colors::LIGHT_YELLOW,
+                );
+            }
+        } else {
+            log.add(
+                format!("Can't dequip {:?} because it's not an Equipment.", self),
+                colors::RED,
+            );
+        }
     }
 
 }
@@ -233,12 +296,14 @@ impl Tile {
 enum Item {
     Heal,
     AttackBuff,
-    Lightning
+    Lightning,
+    Equipment
 }
 
 enum UseResult {
     UsedUp,
     Cancelled,
+    UseAndKept
 }
 
 type Map = Vec<Vec<Tile>>;
@@ -414,6 +479,21 @@ fn cast_lightning(
         game.log.add("No enemy is close enough to strike.", colors::RED);
         UseResult::Cancelled
     }
+}
+
+fn toggle_equipment(_tcod: &mut Tcod, inventory_id: usize, _objects: &mut [Object], game: &mut Game) -> UseResult {
+    let equipment = match game.inventory[inventory_id].equipment {
+        Some(equipment) => equipment,
+        None => return UseResult::Cancelled,
+    };
+
+    if equipment.equipped {
+        game.inventory[inventory_id].dequip(&mut game.log);
+    }else{
+        game.inventory[inventory_id].equip(&mut game.log);
+    }
+
+    UseResult::UseAndKept
 }
 
 fn level_up(objects: &mut [Object], game: &mut Game, tcod: &mut Tcod){
@@ -712,7 +792,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
 
 
         let choices = ["orc", "troll", "boss"];
-        let weights = [6,   troll_chance,   1];
+        let weights = [60,   troll_chance,   10];
         let monster_choice = WeightedIndex::new(&weights).unwrap();
 
 
@@ -782,7 +862,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
         let y = rand::thread_rng().gen_range(room.y1 +1 , room.y2);
 
 
-        let item_chances = [Item::Heal, Item::Lightning, Item::AttackBuff];
+        let item_chances = [Item::Heal, Item::Lightning, Item::AttackBuff, Item::Equipment];
         let weights = [
             35,
             from_dungeon_level(
@@ -799,6 +879,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
                 }],
                 level,
             ),
+            10000
         ];
         let item_choice = WeightedIndex::new(&weights).unwrap();
 
@@ -821,6 +902,12 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
                     object.item = Some(Item::AttackBuff);
                     object
                 }
+                Item::Equipment => {
+                    let mut object = Object::new(x, y, '/', "sword", colors::SKY, false);
+                    object.item = Some(Item::Equipment);
+                    object.equipment = Some(Equipment{equipped: false, slot: Slot::RightHand});
+                    object
+                }
 
                 _ => unreachable!()
             };
@@ -838,12 +925,14 @@ fn use_item (tcod: &mut Tcod, inventory_id: usize, object: &mut [Object], game: 
             Heal => cast_heal,
             AttackBuff => cast_attack_buff,
             Lightning => cast_lightning,
+            Equipment => toggle_equipment,
         };
 
         match on_use(tcod, inventory_id, object, game){
             UseResult::UsedUp => {
                 &mut game.inventory.remove(inventory_id);
             }
+            UseResult::UseAndKept => {},
             UseResult::Cancelled => {
                 game.log.add("Cancelled", colors::WHITE);
             }
