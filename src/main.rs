@@ -355,7 +355,7 @@ enum Item {
     Heal,
     AttackBuff,
     Lightning,
-    Equipment
+    Sword
 }
 
 enum UseResult {
@@ -970,7 +970,7 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
         let y = rand::thread_rng().gen_range(room.y1 +1 , room.y2);
 
 
-        let item_chances = [Item::Heal, Item::Lightning, Item::AttackBuff, Item::Equipment];
+        let item_chances = [Item::Heal, Item::Lightning, Item::AttackBuff, Item::Sword];
         let weights = [
             35,
             from_dungeon_level(
@@ -1016,9 +1016,9 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
                     object.item = Some(Item::AttackBuff);
                     object
                 }
-                Item::Equipment => {
+                Item::Sword => {
                     let mut object = Object::new(x, y, '/', "sword", colors::SKY, false);
-                    object.item = Some(Item::Equipment);
+                    object.item = Some(Item::Sword);
                     object.equipment = Some(Equipment{equipped: false, slot: Slot::RightHand, power_bonus: 3, defense_bonus: 0, max_hp_bonus: 0});
                     object
                 }
@@ -1039,7 +1039,7 @@ fn use_item (tcod: &mut Tcod, inventory_id: usize, object: &mut [Object], game: 
             Heal => cast_heal,
             AttackBuff => cast_attack_buff,
             Lightning => cast_lightning,
-            Equipment => toggle_equipment,
+            Sword => toggle_equipment,
         };
 
         match on_use(tcod, inventory_id, object, game){
