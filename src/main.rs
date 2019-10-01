@@ -241,7 +241,7 @@ impl Object {
 ////                    }
 //                }
 
-            __ => ()
+            _ => ()
 
         }
     }
@@ -1057,8 +1057,6 @@ fn place_object(room: Rect, map: &Map, objects: &mut Vec<Object>, level: u32){
                     object.equipment = Some(Equipment{equipped: false, slot: Slot::LeftHand, power_bonus: 0, defense_bonus: 1, max_hp_bonus: 0});
                     object
                 }
-
-                _ => unreachable!()
             };
             item.always_visible = true;
             objects.push(item);
