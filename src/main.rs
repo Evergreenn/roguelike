@@ -158,7 +158,7 @@ impl Object {
         }
     }
 
-    pub fn draw(&self, con: &mut Console){
+    pub fn draw(&self, con: &mut dyn Console){
         con.set_default_foreground(self.color);
         con.put_char(self.x, self.y, self.char, BackgroundFlag::None);
     }
@@ -1473,7 +1473,7 @@ fn save_game(objects: &[Object], game: &Game) -> Result<(), Box<Error>> {
     Ok(())
 }
 
-fn load_game() -> Result<(Vec<Object>, Game), Box<Error>> {
+fn load_game() -> Result<(Vec<Object>, Game), Box<dyn Error>> {
     let mut json_save_state = String::new();
     let mut file = File::open("savegame")?;
     file.read_to_string(&mut json_save_state)?;
