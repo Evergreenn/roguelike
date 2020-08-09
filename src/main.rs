@@ -232,14 +232,6 @@ impl Object {
                     }
                 }
 
-//            "attack_buff" =>
-//                if let Some(ref mut fighter) = self.fighter {
-//                    self.power(game) += amount;
-////                    if fighter.power >= PLAYER_MAX_ATTACK{
-////                        fighter.power = PLAYER_MAX_ATTACK;
-////                    }
-//                }
-
             _ => ()
 
         }
@@ -274,7 +266,7 @@ impl Object {
     pub fn dequip(&mut self, log: &mut Vec<(String, Color)>) {
         if self.item.is_none() {
             log.add(
-                format!("Can't dequip {:?} because it's not an Item.", self),
+                format!("Can't unequip {:?} because it's not an Item.", self),
                 colors::RED,
             );
             return;
@@ -283,13 +275,13 @@ impl Object {
             if equipment.equipped {
                 equipment.equipped = false;
                 log.add(
-                    format!("Dequipped {} from {:?}.", self.name, equipment.slot),
+                    format!("Unequipped {} from {:?}.", self.name, equipment.slot),
                     colors::LIGHT_YELLOW,
                 );
             }
         } else {
             log.add(
-                format!("Can't dequip {:?} because it's not an Equipment.", self),
+                format!("Can't unequip {:?} because it's not an Equipment.", self),
                 colors::RED,
             );
         }
@@ -522,7 +514,7 @@ fn cast_attack_buff(tcod: &mut Tcod, _inventory_id: usize, objects: &mut [Object
 
     if let Some(fighter) = objects[PLAYER].fighter {
         if fighter.base_power >= PLAYER_MAX_ATTACK {
-            game.log.add("your attack lvl is too high for this item level", colors::RED);
+            game.log.add("Your attack lvl is too high for this item level", colors::RED);
             return UseResult::Cancelled;
         }
         objects[PLAYER].cast(tcod, "attack_buff", ATTACK_BUFF, game);
@@ -724,7 +716,7 @@ fn pick_item_up(object_id:usize, objects: &mut Vec<Object>, game: &mut Game){
 
     }else{
         let item = objects.swap_remove(object_id);
-        game.log.add(format!("you pick up a {}", item.name),colors::GREEN);
+        game.log.add(format!("You pick up a {}", item.name),colors::GREEN);
 
         game.inventory.push(item);
     }
@@ -813,7 +805,7 @@ fn monster_death(monster: &mut Object, game: &mut Game) {
     monster.blocks = false;
     monster.fighter = None;
     monster.ai = None;
-    monster.name = format!("remains of {}", monster.name);
+    monster.name = format!("Remains of {}", monster.name);
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -1150,7 +1142,7 @@ fn make_map(objects: &mut Vec<Object>, level: u32) -> Map {
         last_room_x,
         last_room_y,
         '<',
-        "stairs",
+        "Stairs",
         colors::WHITE,
         false,
     );
@@ -1256,7 +1248,7 @@ fn render_all(
             3,
             BackgroundFlag::None,
             TextAlignment::Left,
-            format!("attack: {}", attack)
+            format!("Attack: {}", attack)
         );
 
         tcod.panel.set_default_foreground(colors::LIGHT_AZURE);
@@ -1265,7 +1257,7 @@ fn render_all(
             4,
             BackgroundFlag::None,
             TextAlignment::Left,
-            format!("defense: {}", defense)
+            format!("Defense: {}", defense)
         );
 
 
@@ -1463,16 +1455,16 @@ fn initialise_fov(map: &Map, tcod: &mut Tcod) {
     tcod.con.clear();
 }
 
-fn save_game(objects: &[Object], game: &Game) -> Result<(), Box<Error>> {
+fn save_game(objects: &[Object], game: &Game) -> Result<(), Box<dyn Error>> {
     let save_data = serde_json::to_string(&(objects, game))?;
-    let mut file = File::create("savegame")?;
+    let mut file = File::create("Savegame")?;
     file.write_all(save_data.as_bytes())?;
     Ok(())
 }
 
 fn load_game() -> Result<(Vec<Object>, Game), Box<dyn Error>> {
     let mut json_save_state = String::new();
-    let mut file = File::open("savegame")?;
+    let mut file = File::open("Savegame")?;
     file.read_to_string(&mut json_save_state)?;
     let result = serde_json::from_str::<(Vec<Object>, Game)>(&json_save_state)?;
     Ok(result)
